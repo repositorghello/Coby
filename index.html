@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Coby © 2026</title>
+
+<style>
+body {
+  background: #0f172a;
+  color: white;
+  font-family: Arial;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.chatbox {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 15px;
+  width: 420px;
+}
+
+#output {
+  height: 260px;
+  overflow-y: auto;
+  background: #020617;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
+
+.loader {
+  width: 25px;
+  height: 25px;
+  background: cyan;
+  border-radius: 50%;
+  animation: morph 1s infinite;
+  display: none;
+  margin: 5px auto;
+}
+
+@keyframes morph {
+  0% {border-radius: 50%;}
+  50% {border-radius: 10%; transform: rotate(180deg);}
+  100% {border-radius: 50%;}
+}
+
+input {
+  width: 62%;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.commands {
+  margin-top: 15px;
+  background: #020617;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.commands h3 {
+  margin: 0 0 5px 0;
+  color: cyan;
+}
+</style>
+</head>
+
+<body>
+
+<div class="chatbox">
+
+  <div id="output"></div>
+
+  <div class="loader" id="loader"></div>
+
+  <input id="input" placeholder="Ask Coby...">
+  <button onclick="send()">Enter</button>
+  <button onclick="clearChat()">Clear</button>
+
+  <div class="commands">
+    <h3>🧠 Coby Commands</h3>
+    <p>
+      Try:
+      2+2,
+      add 5 7,
+      25th letter,
+      word for A,
+      what is speed,
+      water boils,
+      mitosis,
+      strong house
+    </p>
+  </div>
+
+</div>
+
+<script>
+
+// 🧠 KEYWORDS
+const KEYWORDS = {
+  greetings: ["hi","hello","hey","yo","sup"],
+
+  science: [
+    "science","fact","space","planet",
+    "earth","sun","gravity"
+  ],
+
+  add: ["add","plus","sum"],
+  subtract: ["subtract","minus","difference"],
+  multiply: ["multiply","times","product"],
+  divide: ["divide","over"],
+
+  sqrt: ["square root","sqrt"],
+  cbrt: ["cube root","cbrt"],
+
+  area: ["area"],
+  volume: ["volume"],
+
+  happy: ["happy","good","great","fine"],
+  sad: ["sad","bad","upset"],
+  angry: ["angry","mad"],
+  tired: ["tired","sleepy"]
+};
+
+// 🌍 KNOWLEDGE DATABASE
+const KNOWLEDGE = {
+
+  // 🔤 Alphabet
+  alphabet: {
+    letters: "abcdefghijklmnopqrstuvwxyz".split(""),
+
+    words: {
+      a:"Apple",
+      b:"Ball",
+      c:"Cat",
+      d:"Dog",
+      e:"Elephant",
+      f:"Fish",
+      g:"Goat",
+      h:"Hat",
+      i:"Ice Cream",
+      j:"Jug",
+      k:"Kite",
+      l:"Lion",
+      m:"Monkey",
+      n:"Nest",
+      o:"Orange",
+      p:"Parrot",
+      q:"Queen",
+      r:"Rabbit",
+      s:"Sun",
+      t:"Tiger",
+      u:"Umbrella",
+      v:"Van",
+      w:"Watch",
+      x:"Xylophone",
+      y:"Yak",
+      z:"Zebra"
+    }
+  },
+
+  // 🔬 Science facts
+  science: {
+
+    "water boils":
+      "Water boils at 100°C.",
+
+    "water freezes":
+      "Water freezes at 0°C.",
+
+    "mercury":
+      "Mercury is liquid at room temperature.",
+
+    "sun":
+      "The Sun is a star.",
+
+    "gravity":
+      "Gravity pulls objects toward Earth.",
+
+    "earth":
+      "Earth is the third planet from the Sun.",
+
+    "plants":
+      "Plants make food using photosynthesis."
+  },
+
+  // 📘 Definitions
+  definitions: {
+
+    "speed":
+      "Speed is distance travelled per unit time.",
+
+    "velocity":
+      "Velocity is speed with direction.",
+
+    "acceleration":
+      "Acceleration is the rate of change of velocity.",
+
+    "force":
+      "Force is a push or pull.",
+
+    "gravity":
+      "Gravity is the force that pulls things toward Earth.",
+
+    "energy":
+      "Energy is the ability to do work.",
+
+    "mitosis":
+      "Mitosis is cell division producing two identical cells.",
+
+    "meiosis":
+      "Meiosis is cell division producing reproductive cells.",
+
+    "strong house":
+      "A strong house is built with bricks, cement, steel, and concrete.",
+
+    "weak house":
+      "A weak house is made from materials like straw, mud, or wood."
+  }
+
+};
+
+// 🎲 RANDOM
+function randomReply(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// 🧹 CLEAN
+function clean(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9+\-*/ ]/g, "");
+}
+
+// 🔍 MATCH
+function matchIntent(msg, list) {
+  return list.some(word => msg.includes(word));
+}
+
+// 💬 APPEND
+function append(text) {
+  document.getElementById("output").innerHTML += text + "<br>";
+}
+
+// 🤖 MAIN BRAIN
+function getReply(input) {
+
+  let msg = clean(input);
+
+  // 🔥 Direct math expressions
+  let expression =
+    msg.match(/\d+\s*[\+\-\*\/]\s*\d+/);
+
+  if (expression) {
+    try {
+      return eval(expression[0]);
+    } catch(e) {}
+  }
+
+  // 🔢 Numbers
+  let nums = msg.match(/\d+/g);
+
+  if (nums) {
+    nums = nums.map(Number);
+  }
+
+  try {
+
+    // 😊 Emotions
+    if (
+      msg.startsWith("i am") ||
+      msg.startsWith("im ")
+    ) {
+
+      let feeling =
+        msg.split(" ").slice(2).join(" ");
+
+      if (
+        matchIntent(feeling, KEYWORDS.happy)
+      ) {
+        return randomReply([
+          "Nice 😄",
+          "Good to hear!"
+        ]);
+      }
+
+      if (
+        matchIntent(feeling, KEYWORDS.sad)
+      ) {
+        return randomReply([
+          "I'm here for you 💙",
+          "Stay strong"
+        ]);
+      }
+
+      if (
+        matchIntent(feeling, KEYWORDS.angry)
+      ) {
+        return randomReply([
+          "Relax 😅",
+          "Take it easy"
+        ]);
+      }
+
+      if (
+        matchIntent(feeling, KEYWORDS.tired)
+      ) {
+        return "Get some rest 😴";
+      }
+
+      return "Tell me more 🤔";
+    }
+
+    // 👋 Greetings
+    if (
+      matchIntent(msg, KEYWORDS.greetings)
+    ) {
+
+      return randomReply([
+        "Hey! 🤖",
+        "Hello 👋",
+        "Yo 😎"
+      ]);
+    }
+
+    // 🔤 Alphabet Questions
+    if (
+      msg.includes("letter") &&
+      nums
+    ) {
+
+      let n = nums[0];
+
+      if (
+        n >= 1 &&
+        n <= 26
+      ) {
+
+        return KNOWLEDGE
+          .alphabet
+          .letters[n - 1]
+          .toUpperCase();
+      }
+    }
+
+    // 🔤 Word for letter
+    if (
+      msg.includes("word for")
+    ) {
+
+      let parts =
+        msg.split(" ");
+
+      let letter =
+        parts[parts.length - 1];
+
+      if (
+        KNOWLEDGE.alphabet.words[letter]
+      ) {
+
+        return KNOWLEDGE
+          .alphabet
+          .words[letter];
+      }
+    }
+
+    // 📘 Definitions
+    for (
+      let key in
+      KNOWLEDGE.definitions
+    ) {
+
+      if (
+        msg.includes(key)
+      ) {
+
+        return KNOWLEDGE
+          .definitions[key];
+      }
+    }
+
+    // 🔬 Science facts
+    for (
+      let key in
+      KNOWLEDGE.science
+    ) {
+
+      if (
+        msg.includes(key)
+      ) {
+
+        return KNOWLEDGE
+          .science[key];
+      }
+    }
+
+    // ➕ Add
+    if (
+      matchIntent(msg, KEYWORDS.add)
+    ) {
+
+      return nums.reduce(
+        (a,b)=>a+b
+      );
+    }
+
+    // ➖ Subtract
+    if (
+      matchIntent(msg, KEYWORDS.subtract)
+    ) {
+
+      return nums[0] - nums[1];
+    }
+
+    // ✖ Multiply
+    if (
+      matchIntent(msg, KEYWORDS.multiply)
+    ) {
+
+      return nums[0] * nums[1];
+    }
+
+    // ➗ Divide
+    if (
+      matchIntent(msg, KEYWORDS.divide)
+    ) {
+
+      return nums[0] / nums[1];
+    }
+
+    // √ Square root
+    if (
+      matchIntent(msg, KEYWORDS.sqrt)
+    ) {
+
+      return Math.sqrt(nums[0]);
+    }
+
+    // ∛ Cube root
+    if (
+      matchIntent(msg, KEYWORDS.cbrt)
+    ) {
+
+      return Math.cbrt(nums[0]);
+    }
+
+    // 📐 Area
+    if (
+      matchIntent(msg, KEYWORDS.area)
+    ) {
+
+      return "Area: " +
+        (nums[0] * nums[1]);
+    }
+
+    // 📦 Volume
+    if (
+      matchIntent(msg, KEYWORDS.volume)
+    ) {
+
+      return "Volume: " +
+        (nums[0] *
+        nums[1] *
+        nums[2]);
+    }
+
+  } catch(e) {}
+
+  // 🤖 Fallback
+  return randomReply([
+
+    "I'm still learning 🤖",
+
+    "Try asking differently 😅",
+
+    "I didn't understand that",
+
+    "Can you rephrase it?"
+  ]);
+}
+
+// 🚀 SEND
+function send() {
+
+  let input =
+    document.getElementById("input").value;
+
+  append("<b>You:</b> " + input);
+
+  document.getElementById("loader")
+    .style.display = "block";
+
+  setTimeout(() => {
+
+    let reply =
+      getReply(input);
+
+    document.getElementById("loader")
+      .style.display = "none";
+
+    append("<b>Coby:</b> " + reply);
+
+  }, 400);
+
+  document.getElementById("input").value = "";
+}
+
+// 🧹 CLEAR
+function clearChat() {
+  document.getElementById("output").innerHTML = "";
+}
+
+</script>
+
+</body>
+</html>
